@@ -1,28 +1,23 @@
-# Ultroid - UserBot
-# Copyright (C) 2021-2023 TeamUltroid
-#
-# This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
-# PLease read the GNU Affero General Public License in
-# <https://github.com/TeamUltroid/pyUltroid/blob/main/LICENSE>.
-
 import glob
 import os
 import re
 import time
 
 from telethon import Button
+from yt_dlp import YoutubeDL
 
 try:
     from youtubesearchpython import Playlist, VideosSearch
 except ImportError:
     Playlist, VideosSearch = None, None
 
-from yt_dlp import YoutubeDL
-
 from .. import LOGS, udB
 from .helper import download_file, humanbytes, run_async, time_formatter
 from .tools import set_attributes
 
+# Credenciales de YouTube
+YT_USERNAME = "c9769052@gmail.com"  # Sustituye con tu correo de YouTube
+YT_PASSWORD = "oseias1234M!"        # Sustituye con tu contraseña de YouTube
 
 async def ytdl_progress(k, start_time, event):
     if k["status"] == "error":
@@ -41,14 +36,12 @@ async def ytdl_progress(k, start_time, event):
             except Exception as ex:
                 LOGS.error(f"ytdl_progress: {ex}")
 
-
 def get_yt_link(query):
     search = VideosSearch(query, limit=1).result()
     try:
         return search["result"][0]["link"]
     except IndexError:
         return
-
 
 async def download_yt(event, link, ytd):
     reply_to = event.reply_to_msg_id or event
@@ -226,21 +219,21 @@ def get_buttons(listt):
     buttons.append([Button.inline("« Back", f"ytdl_back:{id}")])
     return buttons
 
-
 async def dler(event, url, opts: dict = {}, download=False):
     await event.edit("`Getting Data...`")
-    if "quiet" not in opts:
-        opts["quiet"] = True
-    opts["username"] = udB.get_key("YT_USERNAME")
-    opts["password"] = udB.get_key("YT_PASSWORD")
+    # Añadir credenciales directamente a las opciones de yt-dlp
+    opts["quiet"] = True
+    opts["username"] = YT_USERNAME
+    opts["password"] = YT_PASSWORD
+
     if download:
         await ytdownload(url, opts)
+
     try:
         return await extract_info(url, opts)
     except Exception as e:
         await event.edit(f"{type(e)}: {e}")
         return
-
 
 @run_async
 def ytdownload(url, opts):
@@ -248,7 +241,6 @@ def ytdownload(url, opts):
         return YoutubeDL(opts).download([url])
     except Exception as ex:
         LOGS.error(ex)
-
 
 @run_async
 def extract_info(url, opts):
